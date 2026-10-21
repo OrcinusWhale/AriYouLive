@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AriYouLive — Alert Center</title>
+  <link rel="icon" type="image/png" href="assets/shield-logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="alerts-window">
+  <main class="alerts-native">
+    <header class="alerts-native-header">
+      <div class="alerts-brand"><img src="assets/shield-logo.png" alt="AriYouLive shield"><div><small>ARIYOULIVE · INCIDENT MANAGEMENT</small><h1>Alert Center</h1><p>Active incidents and acknowledged history</p></div></div>
+      <button class="btn" id="refreshAlerts">Refresh</button>
+    </header>
+    <div class="alerts-toolbar">
+      <select id="alertIpFilter"><option value="">All IP addresses</option></select>
+      <select id="alertGroupFilter"><option value="">All Groups</option></select>
+      <button class="btn primary" id="acknowledgeAll" type="button">Acknowledge All</button>
+      <div class="history-tools" id="historyTools" hidden>
+        <select id="historyRangeFilter" aria-label="Filter history by age"><option value="1">Last 24 Hours</option><option value="7">Last 7 Days</option><option value="30" selected>Last 30 Days</option><option value="all">All</option></select>
+        <select id="cleanupAge" aria-label="Delete history older than"><option value="15">Delete older than 15 days</option><option value="30" selected>Delete older than 30 days</option><option value="60">Delete older than 60 days</option><option value="90">Delete older than 90 days</option><option value="custom">Custom...</option></select>
+        <label id="cleanupCustomWrap" class="cleanup-custom-wrap" hidden>Days<input id="cleanupCustomDays" type="number" min="1" max="3650" step="1" value="45" aria-label="Custom retention days"></label>
+        <button class="btn danger" id="cleanupHistory" type="button">Clean up</button>
+      </div>
+      <div class="tabs alert-tabs"><button class="selected" data-alert-tab="active">Active <span id="activeCount">0</span></button><button data-alert-tab="history">History <span id="historyCount">0</span></button><button data-alert-tab="muted">Muted <span id="mutedCount">0</span></button></div>
+    </div>
+    <section class="panel">
+      <div class="alert-summary"><b id="listTitle">Active alerts</b><span id="totalCount">0 total</span></div>
+      <div id="alertList"><div class="empty">Loading alerts…</div></div>
+      <button class="btn load-more-alerts" id="loadMoreAlerts" type="button" hidden>Load More Alerts</button>
+    </section>
+    <div id="alertError" role="status" hidden></div>
+  </main>
+  <dialog id="alertInfoDialog" class="alert-info-dialog">
+    <div class="modal-head"><div><small>DEVICE CONTEXT</small><h2>Alert information</h2></div><button type="button" id="alertInfoClose" class="icon-btn" aria-label="Close">×</button></div>
+    <dl class="alert-info-fields"><div><dt>Device name</dt><dd id="infoDevice"></dd></div><div><dt>IP address</dt><dd id="infoIp"></dd></div><div><dt>Parent group</dt><dd id="infoGroup"></dd></div><div><dt>Subgroup</dt><dd id="infoSubgroup"></dd></div><div class="note-field"><dt>Note</dt><dd id="infoNote"></dd></div></dl>
+  </dialog>
+  <script src="alerts.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{
+  "name": "ariyou-live-edge-monitor",
+  "version": "0.1.0",
+  "description": "AriYouLive local network edge monitor",
+  "private": true,
+  "main": "desktop/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "service:build": "pyinstaller --clean --onefile --name ariyoulive-service server.py",
+    "package:mac": "npm run service:build && electron-builder --mac",
+    "package:win": "npm run service:build && electron-builder --win nsis portable",
+    "service:build:win": "node scripts/check-win-build.js && pyinstaller --clean --onefile --name ariyoulive-service --distpath dist/windows/service --workpath build/windows/pyinstaller --specpath build/windows/spec server.py",
+    "build:win": "npm run service:build:win && electron-builder --win portable --x64 --config electron-builder.win.yml"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.ariyou.live.edge-monitor",
+    "productName": "AriYouLive Edge Monitor",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "index.html",
+      "style.css",
+      "app.js",
+      "package.json",
+      "assets/shield-logo.png"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/",
+        "to": "service/"
+      },
+      {
+        "from": "index.html",
+        "to": "ui/index.html"
+      },
+      {
+        "from": "style.css",
+        "to": "ui/style.css"
+      },
+      {
+        "from": "app.js",
+        "to": "ui/app.js"
+      },
+      {
+        "from": "alerts.html",
+        "to": "ui/alerts.html"
+      },
+      {
+        "from": "alerts.js",
+        "to": "ui/alerts.js"
+      },
+      {
+        "from": "assets/shield-logo.png",
+        "to": "ui/assets/shield-logo.png"
+      },
+      {
+        "from": "assets/shield-logo.png",
+        "to": "assets/shield-logo.png"
+      }
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.utilities",
+      "icon": "assets/shield-logo.icns"
+    },
+    "win": {
+      "icon": "assets/shield-logo.ico"
+    }
+  }
+}

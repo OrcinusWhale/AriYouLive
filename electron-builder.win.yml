@@ -1,0 +1,36 @@
+appId: com.ariyou.live.edge-monitor
+productName: AriYouLive Edge Monitor
+directories:
+  output: dist/windows/portable
+files:
+  - desktop/**/*
+  - index.html
+  - style.css
+  - app.js
+  - package.json
+  - assets/shield-logo.png
+extraResources:
+  - from: dist/windows/service/
+    to: service/
+  - from: server.py
+    to: service-source/server.py
+  - from: index.html
+    to: ui/index.html
+  - from: style.css
+    to: ui/style.css
+  - from: app.js
+    to: ui/app.js
+  - from: alerts.html
+    to: ui/alerts.html
+  - from: alerts.js
+    to: ui/alerts.js
+  - from: assets/shield-logo.png
+    to: ui/assets/shield-logo.png
+  - from: assets/shield-logo.png
+    to: assets/shield-logo.png
+win:
+  icon: assets/shield-logo.ico
+  target:
+    - target: portable
+      arch:
+        - x64
