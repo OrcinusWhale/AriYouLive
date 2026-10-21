@@ -16,24 +16,24 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Change to your preferred Node version if needed
+          node-version: '20'
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # PyInstaller works reliably on modern Python versions
+          python-version: '3.11'
 
       - name: Install Node dependencies
-        run: npm install[cite: 2]
+        run: npm install
 
       - name: Install PyInstaller
-        run: pip install pyinstaller[cite: 2]
+        run: pip install pyinstaller
 
       - name: Run Windows build
-        run: npm run build:win[cite: 2]
+        run: npm run build:win
 
       - name: Upload portable build artifact
         uses: actions/upload-artifact@v4
         with:
           name: AriYouLive-Windows-Portable
-          path: dist/windows/portable/[cite: 2]
+          path: dist/windows/portable/
