@@ -36,12 +36,12 @@ jobs:
       - name: Run Windows build
         run: npm run build:win
 
-      # Step A: Grab only the .exe sitting directly in the 'release' root (ignoring win-unpacked)
+      # Step A: Isolate only the .exe from the hardcoded output directory
       - name: Clean up extra build files
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "final-exe"
-          Get-ChildItem -Path "release" -File -Filter "*.exe" | Copy-Item -Destination "final-exe"
+          Get-ChildItem -Path "dist/windows/portable" -File -Filter "*.exe" | Copy-Item -Destination "final-exe"
 
       # Step B: Upload Artifact
       - name: Upload portable build artifact
