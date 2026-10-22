@@ -77,7 +77,11 @@ def init():
     fresh_install=not DB_PATH.exists()
     DB_PATH.parent.mkdir(parents=True,exist_ok=True)
     AUDIO_DIR.mkdir(parents=True,exist_ok=True)
-    if fresh_install and BUNDLED_AUDIO_DIR.is_dir():
+    # Packaged sounds live beside the application, while the editable library
+    # lives in the user's data directory. Seed any missing bundled files on
+    # every launch so upgrades also populate an existing installation without
+    # overwriting sounds the user has already uploaded or changed.
+    if BUNDLED_AUDIO_DIR.is_dir():
         for asset in BUNDLED_AUDIO_DIR.iterdir():
             if asset.is_file() and asset.suffix.lower() in (".mp3",".wav",".json") and re.fullmatch(r"[0-9a-f]{32}.(mp3|wav|json)",asset.name):
                 target=AUDIO_DIR/asset.name

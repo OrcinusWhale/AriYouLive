@@ -1,6 +1,6 @@
 {
   "name": "ariyou-live-edge-monitor",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AriYouLive local network edge monitor",
   "private": true,
   "main": "desktop/main.js",
