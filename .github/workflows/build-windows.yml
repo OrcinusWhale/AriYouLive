@@ -2,8 +2,12 @@ name: Build Windows App
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch: # Allows you to manually trigger it from the GitHub Actions tab
+    tags:
+      - 'v*' # Triggers automatically when you push a version tag (e.g. v1.0.0)
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+permissions:
+  contents: write # Grants permission to create GitHub Releases
 
 jobs:
   build:
@@ -32,8 +36,28 @@ jobs:
       - name: Run Windows build
         run: npm run build:win
 
+      # Step A: Isolate only the .exe file
+      - name: Clean up extra build files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "final-exe"
+          Get-ChildItem -Path "dist" -Recurse -Filter "*.exe" | Copy-Item -Destination "final-exe"
+
+      # Step B: Upload Artifact (now contains only the .exe)
       - name: Upload portable build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AriYouLive-Windows-Portable
-          path: dist/windows/portable/
+          name: AriYouLive-Windows-Executable
+          path: final-exe/
+
+      # Step C: Create GitHub Release (attaches only the .exe)
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            final-exe/*

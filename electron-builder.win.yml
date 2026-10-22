@@ -28,6 +28,8 @@ extraResources:
     to: ui/assets/shield-logo.png
   - from: assets/shield-logo.png
     to: assets/shield-logo.png
+  - from: assets/sounds/
+    to: audio/
 win:
   icon: assets/shield-logo.ico
   target:

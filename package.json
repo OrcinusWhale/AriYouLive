@@ -62,6 +62,10 @@
       {
         "from": "assets/shield-logo.png",
         "to": "assets/shield-logo.png"
+      },
+      {
+        "from": "assets/sounds/",
+        "to": "audio/"
       }
     ],
     "mac": {

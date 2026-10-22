@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """AriYouLive Edge Monitor: local, persistent ICMP monitor and SQLite API."""
 from __future__ import annotations
-import base64, json, os, platform, re, sqlite3, subprocess, threading, time, uuid
+import base64, json, os, platform, re, shutil, sqlite3, subprocess, threading, time, uuid
 from datetime import datetime, timezone
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -12,8 +12,9 @@ ROOT = Path(__file__).resolve().parent
 UI_ROOT = Path(os.environ.get("ARIYOULIVE_UI_DIR", str(ROOT)))
 DB_PATH = Path(os.environ.get("ARIYOULIVE_DB", str(ROOT / "ariyou_live.db")))
 AUDIO_DIR = Path(os.environ.get("ARIYOULIVE_AUDIO_DIR", str(Path.home() / ".ariyou_live" / "audio")))
+BUNDLED_AUDIO_DIR = Path(os.environ.get("ARIYOULIVE_BUNDLED_AUDIO_DIR", str(ROOT / "assets" / "sounds")))
 HOST, PORT = os.environ.get("ARIYOULIVE_HOST", "127.0.0.1"), int(os.environ.get("ARIYOULIVE_PORT", "8765"))
-DEFAULTS = {"ping_every": 5, "timeout_ms": 1200, "fail_threshold": 3, "history_days": 30, "toast_seconds": 8, "audio_enabled": True, "global_sound_up": "system-default", "global_sound_down": "system-default"}
+DEFAULTS = {"ping_every": 5, "timeout_ms": 1200, "fail_threshold": 3, "history_days": 30, "toast_seconds": 8, "audio_enabled": True, "global_sound_up": "f3989dbd37b44b03a191a4b98ab4e69c", "global_sound_down": "51d5992bbc014d77a440c362db83cf75", "sound_cooldown_seconds": 10, "sound_down_cooldown_seconds": 10, "sound_up_cooldown_seconds": 10, "sound_down_enabled": True, "sound_up_enabled": True}
 SCHEMA = """
 PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);
@@ -73,22 +74,32 @@ def sound_library():
         sounds.append({"id":sid,"name":name,"extension":path.suffix[1:],"url":f"/audio/{path.name}"})
     return sorted(sounds,key=lambda sound:str(sound["name"]).casefold())
 def init():
+    fresh_install=not DB_PATH.exists()
     DB_PATH.parent.mkdir(parents=True,exist_ok=True)
     AUDIO_DIR.mkdir(parents=True,exist_ok=True)
+    if fresh_install and BUNDLED_AUDIO_DIR.is_dir():
+        for asset in BUNDLED_AUDIO_DIR.iterdir():
+            if asset.is_file() and asset.suffix.lower() in (".mp3",".wav",".json") and re.fullmatch(r"[0-9a-f]{32}.(mp3|wav|json)",asset.name):
+                target=AUDIO_DIR/asset.name
+                if not target.exists(): shutil.copy2(asset,target)
     with db() as c:
         c.executescript(SCHEMA)
         for table, column, declaration in (("groups","parent_id","INTEGER REFERENCES groups(id) ON DELETE SET NULL"),("devices","width","INTEGER"),("devices","height","INTEGER"),("devices","note","TEXT NOT NULL DEFAULT ''"),("alerts","snooze_until","REAL"),("alerts","muted_at_creation","INTEGER NOT NULL DEFAULT 0")):
             if column not in {r["name"] for r in c.execute(f"PRAGMA table_info({table})")}:
                 c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declaration}")
-        for k,v in DEFAULTS.items(): c.execute("INSERT OR IGNORE INTO settings VALUES(?,?)",(k,json.dumps(v)))
+        existing_keys={r["key"] for r in c.execute("SELECT key FROM settings")}
+        legacy_cooldown=c.execute("SELECT value FROM settings WHERE key='sound_cooldown_seconds'").fetchone()
+        defaults=DEFAULTS.copy()
+        if not fresh_install or not sound_path(defaults["global_sound_down"]): defaults["global_sound_down"]="system-default"
+        if not fresh_install or not sound_path(defaults["global_sound_up"]): defaults["global_sound_up"]="system-default"
+        for k,v in defaults.items(): c.execute("INSERT OR IGNORE INTO settings VALUES(?,?)",(k,json.dumps(v)))
+        if legacy_cooldown:
+            for key in ("sound_down_cooldown_seconds","sound_up_cooldown_seconds"):
+                if key not in existing_keys: c.execute("UPDATE settings SET value=? WHERE key=?",(legacy_cooldown["value"],key))
         for row in c.execute("SELECT DISTINCT device_id FROM samples").fetchall():
             c.execute("DELETE FROM samples WHERE device_id=? AND id NOT IN (SELECT id FROM samples WHERE device_id=? ORDER BY at DESC,id DESC LIMIT 30)",(row[0],row[0]))
         c.execute("INSERT OR IGNORE INTO settings VALUES(?,?)",("card_scale",json.dumps(1.0)))
         c.execute("INSERT OR IGNORE INTO settings VALUES(?,?)",("global_mute_until",json.dumps(0)))
-        if not c.execute("SELECT 1 FROM groups LIMIT 1").fetchone(): c.execute("INSERT INTO groups(name) VALUES('Core Network')")
-        if not c.execute("SELECT 1 FROM devices LIMIT 1").fetchone():
-            gid=c.execute("SELECT id FROM groups LIMIT 1").fetchone()[0]
-            c.execute("INSERT INTO devices(name,alias,group_id,ips) VALUES(?,?,?,?)",("Gateway","Primary edge router",gid,json.dumps(["192.168.1.1"])))
 
 def effective(d, settings):
     own=json.loads(d["settings"] or "{}"); return {k:(own[k] if own.get(k) is not None else settings[k]) for k in DEFAULTS}
@@ -495,6 +506,15 @@ class Handler(BaseHTTPRequestHandler):
                             if v!="system-default" and not sound_path(v): raise ValueError(f"Unknown sound selected for {k}")
                             c.execute("INSERT OR REPLACE INTO settings VALUES(?,?)",(k,json.dumps(v)))
                             continue
+                        if k in ("sound_down_enabled","sound_up_enabled"):
+                            v=bool(v)
+                            c.execute("INSERT OR REPLACE INTO settings VALUES(?,?)",(k,json.dumps(v)))
+                            continue
+                        if k in ("sound_cooldown_seconds","sound_down_cooldown_seconds","sound_up_cooldown_seconds"):
+                            v=int(v)
+                            if not 0<=v<=3600: raise ValueError(f"{k} must be between 0 and 3600")
+                            c.execute("INSERT OR REPLACE INTO settings VALUES(?,?)",(k,json.dumps(v)))
+                            continue
                         if k=="card_scale":
                             v=float(v)
                             if not 0.55<=v<=1.75: raise ValueError("card_scale must be between 0.55 and 1.75")
@@ -554,6 +574,30 @@ class Handler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         p=urlparse(self.path); parts=p.path.split("/")
         with LOCK,db() as c:
+            if len(parts)==4 and parts[1:3]==["api","sounds"]:
+                sid=parts[3]
+                path=sound_path(sid)
+                if not path: self.send({"error":"Sound not found"},404); return
+                reset_global=[]
+                for key in ("global_sound_down","global_sound_up"):
+                    row=c.execute("SELECT value FROM settings WHERE key=?",(key,)).fetchone()
+                    if row and json.loads(row["value"])==sid:
+                        c.execute("UPDATE settings SET value=? WHERE key=?",(json.dumps("system-default"),key)); reset_global.append(key)
+                updated_devices=0
+                for row in c.execute("SELECT id,settings FROM devices").fetchall():
+                    try: settings=json.loads(row["settings"] or "{}")
+                    except (TypeError,ValueError): continue
+                    changed=False
+                    for key in ("sound_down","sound_up"):
+                        if settings.get(key)==sid: settings[key]="system-default"; changed=True
+                    if changed:
+                        c.execute("UPDATE devices SET settings=? WHERE id=?",(json.dumps(settings),row["id"])); updated_devices+=1
+                try:
+                    path.unlink()
+                    (AUDIO_DIR/(sid+".json")).unlink(missing_ok=True)
+                except OSError as exc:
+                    self.send({"error":f"Could not delete sound file: {exc}"},500); return
+                self.send({"ok":True,"id":sid,"reset_global":reset_global,"updated_devices":updated_devices}); return
             if p.path=="/api/alerts/history":
                 try:
                     days=int(parse_qs(p.query).get("older_than_days",["30"])[0])

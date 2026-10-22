@@ -112,6 +112,10 @@ main #groups .device-grid,.group-column .device-grid{column-gap:6px;row-gap:6px}
 
 .audio-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
 .audio-settings-grid[hidden]{display:none!important}
+.audio-setting-toggle{display:flex!important;align-items:center;gap:8px!important;margin:8px 0!important;color:#cbd5e1!important;font:12px/1.4 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:normal}
+.audio-setting-toggle input{flex:none;accent-color:#2563eb}
+.sound-alert-settings{margin:8px 0 14px;padding:0 13px 10px;border:1px solid #374151;border-radius:7px;background:#17212e}
+.sound-alert-settings .form-section{margin:16px 0 12px;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.45;letter-spacing:normal;font-weight:600;color:#cbd5e1}
 .sound-default-toggle{display:flex!important;align-items:center;gap:8px!important;margin:8px 0!important;color:#cbd5e1!important}
 .sound-default-toggle input{accent-color:#2563eb}
 .sound-management{margin:8px 0 16px;padding:0 13px 12px;border:1px solid #374151;border-radius:7px;background:#17212e}
@@ -147,7 +151,7 @@ main{padding-top:16px;padding-bottom:32px}
 main>header{gap:10px;margin-bottom:7px;min-height:32px}
 main>header>div:first-child{display:flex;align-items:baseline;gap:9px;min-width:0;flex:0 0 auto}
 main>header h1{font-size:20px;line-height:1.15}
-main>header p{margin:0;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;line-height:1.2}
+main>header.overview-header p{margin:0;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;line-height:1.2}
 main>header .dashboard-search{height:30px;min-width:165px;max-width:235px;flex:1 1 205px}
 main>header .actions{gap:5px;flex:0 1 auto;flex-wrap:wrap}
 main>header .actions>.btn{height:32px;min-height:32px;padding:0 9px;font-size:11px}
@@ -159,7 +163,7 @@ main>header .zoom-control .zoom-button{height:26px}
 .section-heading>div{display:flex;align-items:baseline;gap:9px;min-width:0}
 .section-heading h2{font-size:14px}
 .section-heading p{margin:0;font-size:10px;white-space:nowrap}
-@media(max-width:1050px){main>header{align-items:center}main>header>div:first-child p{display:none}main>header .dashboard-search{order:1;flex:1 1 205px;max-width:none}main>header .actions{order:2;flex:1 1 100%;justify-content:flex-start}}
+@media(max-width:1050px){main>header{align-items:center}main>header.overview-header>div:first-child p{display:none}main>header .dashboard-search{order:1;flex:1 1 205px;max-width:none}main>header .actions{order:2;flex:1 1 100%;justify-content:flex-start}}
 @media(max-width:800px){main>header{align-items:stretch;gap:7px}main>header>div:first-child{min-height:24px}main>header .dashboard-search{order:1;flex:1 1 100%;max-width:none}main>header .actions{order:2;flex:1 1 100%;justify-content:flex-start}.section-heading p{display:none}}
 
 /* Overview title plus one continuous, horizontally scrollable toolbar row. */
@@ -211,3 +215,17 @@ main>header.overview-header{display:flex;flex-direction:column;align-items:stret
 .about-version strong{color:#f3f4f6;font-size:14px}
 .about-version span,.about-credit{color:#9ca3af}
 .about-credit{border-top:1px solid #374151;padding-top:14px;margin-top:18px!important}
+
+/* Keep the Alert Center subtitle complete and slightly enlarge transparent shield marks. */
+.alerts-native-header p{max-width:none;overflow:visible;text-overflow:clip;white-space:normal;display:block;line-clamp:unset;-webkit-line-clamp:unset}
+.brand-mark{width:52px;height:60px;background:transparent}
+.service-logo{width:32px;height:36px}
+.alerts-brand>img{width:42px;height:50px;background:transparent}
+
+.sound-library-row{min-height:38px}
+.sound-library-row .sound-library-actions{display:flex;align-items:center;gap:5px;margin-left:auto}
+.sound-library-actions .icon-btn{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;padding:0;border-radius:5px}
+.sound-library-actions svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sound-library-actions .sound-preview-btn{color:#93c5fd}
+.sound-library-actions .sound-delete-btn{color:#fca5a5}
+.sound-library-actions .sound-delete-btn:hover{color:#fff;background:#7f1d1d}

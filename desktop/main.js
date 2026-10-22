@@ -43,6 +43,8 @@ function startService() {
   const packagedPath = path.join(process.resourcesPath, 'service', process.platform === 'win32' ? 'ariyoulive-service.exe' : 'ariyoulive-service');
   const devPython = process.env.ARIYOULIVE_PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
   const packaged = app.isPackaged;
+  const audioDataDir = process.env.ARIYOULIVE_AUDIO_DIR || path.join(app.getPath('userData'), 'audio');
+  const bundledAudioDir = packaged ? path.join(process.resourcesPath, 'audio') : path.join(__dirname, '..', 'assets', 'sounds');
   let command, args;
   if (process.platform === 'win32') {
     // Windows packages carry the PyInstaller executable in resources/service.
@@ -58,7 +60,7 @@ function startService() {
     command = packaged ? packagedPath : devPython;
     args = packaged ? [] : [path.join(__dirname, '..', 'server.py')];
   }
-  service = spawn(command, args, { env: { ...process.env, ARIYOULIVE_HOST: '127.0.0.1', ARIYOULIVE_PORT: String(port), ARIYOULIVE_DB: process.env.ARIYOULIVE_DB || path.join(app.getPath('userData'), 'ariyou_live.db'), ARIYOULIVE_AUDIO_DIR: process.env.ARIYOULIVE_AUDIO_DIR || path.join(app.getPath('userData'), 'audio'), ARIYOULIVE_UI_DIR: packaged ? path.join(process.resourcesPath, 'ui') : path.join(__dirname, '..') }, stdio: 'ignore', windowsHide: true });
+  service = spawn(command, args, { env: { ...process.env, ARIYOULIVE_HOST: '127.0.0.1', ARIYOULIVE_PORT: String(port), ARIYOULIVE_DB: process.env.ARIYOULIVE_DB || path.join(app.getPath('userData'), 'ariyou_live.db'), ARIYOULIVE_AUDIO_DIR: audioDataDir, ARIYOULIVE_BUNDLED_AUDIO_DIR: bundledAudioDir, ARIYOULIVE_UI_DIR: packaged ? path.join(process.resourcesPath, 'ui') : path.join(__dirname, '..') }, stdio: 'ignore', windowsHide: true });
   service.on('error', err => { console.error('Could not start local monitoring service:', err.message); });
 }
 function createWindow() {
