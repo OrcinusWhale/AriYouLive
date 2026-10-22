@@ -36,21 +36,21 @@ jobs:
       - name: Run Windows build
         run: npm run build:win
 
-      # Step A: Isolate only the .exe file
+      # Step A: Isolate only the .exe file in the root of 'dist' (ignoring win-unpacked)
       - name: Clean up extra build files
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "final-exe"
-          Get-ChildItem -Path "dist" -Recurse -Filter "*.exe" | Copy-Item -Destination "final-exe"
+          Get-ChildItem -Path "dist" -File -Filter "*.exe" | Copy-Item -Destination "final-exe"
 
-      # Step B: Upload Artifact (now contains only the .exe)
+      # Step B: Upload Artifact (now contains only the root .exe)
       - name: Upload portable build artifact
         uses: actions/upload-artifact@v4
         with:
           name: AriYouLive-Windows-Executable
           path: final-exe/
 
-      # Step C: Create GitHub Release (attaches only the .exe)
+      # Step C: Create GitHub Release (attaches only the root .exe)
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
