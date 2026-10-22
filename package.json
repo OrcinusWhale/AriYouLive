@@ -1,6 +1,6 @@
 {
   "name": "ariyou-live-edge-monitor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AriYouLive local network edge monitor",
   "private": true,
   "main": "desktop/main.js",
@@ -79,5 +79,8 @@
     "win": {
       "icon": "assets/shield-logo.ico"
     }
+  },
+  "allowScripts": {
+    "electron@39.8.10": true
   }
 }
